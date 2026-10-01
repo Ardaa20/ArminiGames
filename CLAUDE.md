@@ -6,7 +6,8 @@ A minimalist website full of mini games. The home page has only rounded square t
 
 ## Structure
 - `index.html` — home page (tile grid). To add a game, add one line to the `GAMES` list inside it.
-- `assets/theme.css` — shared color variables and the game page frame (`.game-header`, `.game-box`, `.btn`, `.overlay`/`.modal`).
+- `assets/theme.css` — shared color variables (light + dark) and the game page frame (`.game-header`, `.header-right`, `.icon-btn`, `.game-box`, `.btn`, `.overlay`/`.modal`).
+- `assets/theme.js` — dark mode toggle; every page loads it in `<head>`.
 - `games/<game-name>/index.html` + `.js` — each game lives in its own folder; the back button links to `../../index.html`.
 - Plain HTML/CSS/JS, no build step. Links point to `.../index.html` explicitly so the site also works when opened by double-clicking the file.
-- File, folder and code names are in English; on-screen text is in Turkish.
+- Everything is in English: file/folder/code names, comments and on-screen text.

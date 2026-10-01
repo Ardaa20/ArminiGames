@@ -14,14 +14,73 @@
   --accent-2:  #A8C3A0;
   --accent-3:  #E3B5A4;
   --accent-4:  #C9B8D9;
+  --on-accent: #3A3835;
+
+  --board-light: #FFFDFA;
+  --board-dark:  #DDD6CB;
+  --piece-white: #FFFDFA;
+  --piece-black: #3A3835;
+  --piece-line:  #3A3835;
+
+  --shadow:       0 2px 10px rgba(58, 56, 53, 0.06);
+  --shadow-hover: 0 4px 16px rgba(58, 56, 53, 0.09);
+  --overlay:      rgba(58, 56, 53, 0.22);
 
   --radius:    24px;
   --radius-sm: 12px;
   --gap:       20px;
   --pad:       24px;
-  --shadow:    0 2px 10px rgba(58, 56, 53, 0.06);
-  --shadow-hover: 0 4px 16px rgba(58, 56, 53, 0.09);
   --ease:      180ms ease;
+
+  color-scheme: light;
+}
+
+/* Dark mode: same token names, different values */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:        #1C1B19;
+    --surface:   #262522;
+    --border:    #34322E;
+    --muted:     #3A3733;
+    --text:      #E6E1D9;
+    --text-soft: #9A948A;
+    --accent:    #8199B8;
+    --accent-2:  #8FAA88;
+    --accent-3:  #C9998A;
+    --accent-4:  #A897BB;
+    --on-accent: #1C1B19;
+    --board-light: #66615A;
+    --board-dark:  #4E4A44;
+    --piece-white: #EDE8E0;
+    --piece-black: #22211F;
+    --piece-line:  #1A1917;
+    --shadow:       0 2px 10px rgba(0, 0, 0, 0.25);
+    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.35);
+    --overlay:      rgba(0, 0, 0, 0.4);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:        #1C1B19;
+  --surface:   #262522;
+  --border:    #34322E;
+  --muted:     #3A3733;
+  --text:      #E6E1D9;
+  --text-soft: #9A948A;
+  --accent:    #8199B8;
+  --accent-2:  #8FAA88;
+  --accent-3:  #C9998A;
+  --accent-4:  #A897BB;
+  --on-accent: #1C1B19;
+  --board-light: #66615A;
+  --board-dark:  #4E4A44;
+  --piece-white: #EDE8E0;
+  --piece-black: #22211F;
+  --piece-line:  #1A1917;
+  --shadow:       0 2px 10px rgba(0, 0, 0, 0.25);
+  --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --overlay:      rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,9 +92,31 @@ body {
   font-size: 15px;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  transition: background var(--ease), color var(--ease);
 }
 
 a { color: inherit; text-decoration: none; }
+
+/* ---------- Icon button (back, theme toggle) ---------- */
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  display: grid;
+  place-items: center;
+  font: inherit;
+  font-size: 18px;
+  cursor: pointer;
+  transition: transform var(--ease), box-shadow var(--ease);
+}
+.icon-btn:hover { transform: scale(1.05); box-shadow: var(--shadow-hover); }
+.icon-btn svg { width: 20px; height: 20px; }
 
 /* ---------- Game page frame ---------- */
 
@@ -56,19 +137,13 @@ a { color: inherit; text-decoration: none; }
   font-size: 16px;
   font-weight: 600;
 }
+.back:hover .icon-btn { transform: scale(1.05); box-shadow: var(--shadow-hover); }
 
-.back-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  display: grid;
-  place-items: center;
-  font-size: 18px;
-  transition: transform var(--ease), box-shadow var(--ease);
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-.back:hover .back-btn { transform: scale(1.05); box-shadow: var(--shadow-hover); }
 
 .score {
   font-size: 13px;
@@ -103,12 +178,12 @@ a { color: inherit; text-decoration: none; }
   padding: 10px 18px;
   border-radius: var(--radius-sm);
   background: var(--accent);
-  color: var(--text);
+  color: var(--on-accent);
   transition: filter var(--ease), transform var(--ease);
 }
 .btn:hover { filter: brightness(0.95); }
 .btn:active { transform: scale(0.97); }
-.btn.ghost { background: var(--surface); border: 1px solid var(--border); }
+.btn.ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
 .btn:disabled { opacity: 0.5; cursor: default; }
 
 /* ---------- Dialog (game over / choice) ---------- */
@@ -116,7 +191,7 @@ a { color: inherit; text-decoration: none; }
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(58, 56, 53, 0.22);
+  background: var(--overlay);
   backdrop-filter: blur(2px);
   display: grid;
   place-items: center;

@@ -2,8 +2,6 @@
 // Board: board[r][c], r=0 is black's back rank (rank 8), r=7 is white's (rank 1).
 // Pieces are strings like "wp", "bk": first letter is color (w/b), second is type (p n b r q k).
 
-const GLYPH = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" };
-const TEXT_STYLE = "︎"; // prevents rendering as emoji
 const NAME = { w: "White", b: "Black" };
 
 const KNIGHT = [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]];
@@ -180,8 +178,9 @@ const promoChoices = document.getElementById("promoChoices");
 const endOverlay = document.getElementById("endOverlay");
 
 let state, history, selected, targets, over;
+let drag = null; // { r, c, x, y, moved, wasSelected, ghost, hover }
 
-const pieceHTML = (p) => `<span class="pc ${p[0]}">${GLYPH[p[1]]}${TEXT_STYLE}</span>`;
+const DRAG_THRESHOLD = 5; // px before a press becomes a drag
 
 function newGame() {
   state = startState();
@@ -197,6 +196,9 @@ function newGame() {
 function render() {
   const check = inCheck(state, state.turn) ? findKing(state.board, state.turn) : null;
   const L = state.last;
+  const at = (sq, r, c) => sq && sq[0] === r && sq[1] === c;
+  const lifted = drag && drag.moved ? [drag.r, drag.c] : null;
+  const hover = drag && drag.moved ? drag.hover : null;
   boardEl.innerHTML = "";
 
   for (let r = 0; r < 8; r++) {
@@ -205,25 +207,27 @@ function render() {
       const p = state.board[r][c];
       const cls = ["sq", (r + c) % 2 ? "dark" : "light"];
       if (L && ((L.fr === r && L.fc === c) || (L.tr === r && L.tc === c))) cls.push("last");
-      if (selected && selected[0] === r && selected[1] === c) cls.push("sel");
-      if (check && check[0] === r && check[1] === c) cls.push("check");
+      if (at(selected, r, c)) cls.push("sel");
+      if (at(check, r, c)) cls.push("check");
+      if (p && p[0] === state.turn && !over) cls.push("own");
       const t = targets.find((m) => m.tr === r && m.tc === c);
-      if (t) cls.push("target", p || t.ep ? "capture" : "");
-      sq.className = cls.join(" ").trim();
+      if (t) cls.push("target");
+      if (t && (p || t.ep)) cls.push("capture");
+      if (t && at(hover, r, c)) cls.push("hover");
+      sq.className = cls.join(" ");
 
-      let html = p ? pieceHTML(p) : "";
+      let html = p ? pieceSVG(p, at(lifted, r, c) ? "lifted" : "") : "";
       if (c === 0) html += `<span class="coord rank">${8 - r}</span>`;
       if (r === 7) html += `<span class="coord file">${"abcdefgh"[c]}</span>`;
       sq.innerHTML = html;
-      sq.addEventListener("click", () => onSquare(r, c));
       boardEl.appendChild(sq);
     }
   }
 
   const order = "qrbnp";
   const sortTaken = (arr) => [...arr].sort((a, b) => order.indexOf(a[1]) - order.indexOf(b[1]));
-  takenTop.innerHTML = sortTaken(state.captured.b).map(pieceHTML).join("");
-  takenBottom.innerHTML = sortTaken(state.captured.w).map(pieceHTML).join("");
+  takenTop.innerHTML = sortTaken(state.captured.b).map((p) => pieceSVG(p)).join("");
+  takenBottom.innerHTML = sortTaken(state.captured.w).map((p) => pieceSVG(p)).join("");
 
   if (!over) {
     const dot = `<span class="dot ${state.turn}"></span>`;
@@ -232,22 +236,100 @@ function render() {
   document.getElementById("undo").disabled = history.length === 0;
 }
 
-function onSquare(r, c) {
-  if (over || !promoOverlay.hidden) return;
+function squareAt(x, y) {
+  const rect = boardEl.getBoundingClientRect();
+  const size = rect.width / 8;
+  const c = Math.floor((x - rect.left) / size);
+  const r = Math.floor((y - rect.top) / size);
+  return inside(r, c) ? [r, c] : null;
+}
 
-  const move = targets.find((m) => m.tr === r && m.tc === c);
-  if (selected && move) return tryMove(move);
+function select(r, c) {
+  selected = [r, c];
+  targets = legalMoves(state, r, c);
+}
+
+function clearSelection() {
+  selected = null;
+  targets = [];
+}
+
+// Click and drag share one flow: press picks a piece (or plays a target),
+// moving past the threshold starts a drag, release drops it.
+function onPointerDown(e) {
+  if (over || !promoOverlay.hidden || e.button > 0) return;
+  const sq = squareAt(e.clientX, e.clientY);
+  if (!sq) return;
+  const [r, c] = sq;
+
+  const move = selected && targets.find((m) => m.tr === r && m.tc === c);
+  if (move) return tryMove(move);
 
   const p = state.board[r][c];
-  if (p && p[0] === state.turn && !(selected && selected[0] === r && selected[1] === c)) {
-    selected = [r, c];
-    targets = legalMoves(state, r, c);
-  } else {
-    selected = null;
-    targets = [];
+  if (!p || p[0] !== state.turn) {
+    clearSelection();
+    return render();
+  }
+
+  const wasSelected = !!selected && selected[0] === r && selected[1] === c;
+  select(r, c);
+  drag = { r, c, x: e.clientX, y: e.clientY, moved: false, wasSelected, ghost: null, hover: null };
+  render();
+}
+
+function onPointerMove(e) {
+  if (!drag) return;
+  if (!drag.moved) {
+    if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < DRAG_THRESHOLD) return;
+    drag.moved = true;
+    const size = boardEl.getBoundingClientRect().width / 8;
+    drag.ghost = document.createElement("div");
+    drag.ghost.className = "drag-ghost";
+    drag.ghost.style.width = drag.ghost.style.height = size + "px";
+    drag.ghost.innerHTML = pieceSVG(state.board[drag.r][drag.c]);
+    document.body.appendChild(drag.ghost);
+    document.body.classList.add("dragging");
+  }
+  const half = drag.ghost.offsetWidth / 2;
+  drag.ghost.style.transform = `translate(${e.clientX - half}px, ${e.clientY - half}px)`;
+
+  const sq = squareAt(e.clientX, e.clientY);
+  if (String(sq) !== String(drag.hover)) {
+    drag.hover = sq;
+    render();
+  }
+}
+
+function onPointerUp(e) {
+  if (!drag) return;
+  const d = drag;
+  drag = null;
+  if (d.ghost) d.ghost.remove();
+  document.body.classList.remove("dragging");
+
+  if (d.moved) {
+    const sq = squareAt(e.clientX, e.clientY);
+    const move = sq && targets.find((m) => m.tr === sq[0] && m.tc === sq[1]);
+    if (move) return tryMove(move);
+    // dropped elsewhere: piece snaps back and stays selected
+  } else if (d.wasSelected) {
+    clearSelection(); // second click on the same piece deselects it
   }
   render();
 }
+
+function onPointerCancel() {
+  if (!drag) return;
+  if (drag.ghost) drag.ghost.remove();
+  document.body.classList.remove("dragging");
+  drag = null;
+  render();
+}
+
+boardEl.addEventListener("pointerdown", onPointerDown);
+window.addEventListener("pointermove", onPointerMove);
+window.addEventListener("pointerup", onPointerUp);
+window.addEventListener("pointercancel", onPointerCancel);
 
 function tryMove(m) {
   const p = state.board[m.fr][m.fc];
@@ -255,7 +337,7 @@ function tryMove(m) {
     promoChoices.innerHTML = "";
     for (const t of "qrbn") {
       const btn = document.createElement("button");
-      btn.innerHTML = pieceHTML(p[0] + t);
+      btn.innerHTML = pieceSVG(p[0] + t);
       btn.addEventListener("click", () => { promoOverlay.hidden = true; commit(m, t); });
       promoChoices.appendChild(btn);
     }

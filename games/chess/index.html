@@ -5,29 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Chess · ArminiGames</title>
   <link rel="stylesheet" href="../../assets/theme.css">
+  <script src="../../assets/theme.js"></script>
   <style>
+    /* Fixed square size: 60px everywhere, only shrinks when the screen is too narrow */
     .board {
-      --size: max(min(calc(100vw - 56px), calc(100vh - 260px), 520px), 260px);
-      --sq: calc(var(--size) / 8);
-      width: var(--size);
-      height: var(--size);
+      --sq: min(60px, calc((100vw - 56px) / 8));
       display: grid;
-      grid-template-columns: repeat(8, 1fr);
+      grid-template-columns: repeat(8, var(--sq));
+      grid-template-rows: repeat(8, var(--sq));
       border-radius: var(--radius-sm);
       overflow: hidden;
+      touch-action: none;
+      user-select: none;
     }
 
     .sq {
       position: relative;
+      width: var(--sq);
+      height: var(--sq);
       display: grid;
       place-items: center;
-      cursor: pointer;
     }
-    .sq.light { background: var(--surface); }
-    .sq.dark  { background: var(--muted); }
-    .sq.last  { background: color-mix(in srgb, var(--accent) 28%, var(--surface)); }
-    .sq.sel   { background: color-mix(in srgb, var(--accent) 55%, var(--surface)); }
-    .sq.check { background: radial-gradient(circle, var(--accent-3) 30%, transparent 75%), var(--muted); }
+    .sq.light { background-color: var(--board-light); }
+    .sq.dark  { background-color: var(--board-dark); }
+    .sq.last  { background-color: color-mix(in srgb, var(--accent) 35%, var(--board-light)); }
+    .sq.sel   { background-color: color-mix(in srgb, var(--accent) 65%, var(--board-light)); }
+    .sq.check { background-image: radial-gradient(circle, var(--accent-3) 35%, transparent 72%); }
+    .sq.own   { cursor: grab; }
+    .sq.target { cursor: pointer; }
 
     .sq.target::after {
       content: "";
@@ -36,29 +41,43 @@
       height: 28%;
       border-radius: 50%;
       background: var(--accent);
-      opacity: 0.75;
+      opacity: 0.8;
       pointer-events: none;
     }
     .sq.target.capture::after {
-      width: 86%;
-      height: 86%;
+      width: 88%;
+      height: 88%;
       background: transparent;
       border: 4px solid var(--accent);
     }
+    .sq.hover { box-shadow: inset 0 0 0 3px var(--accent); }
 
-    .pc {
-      font-family: "Segoe UI Symbol", "DejaVu Sans", "Noto Sans Symbols 2", serif;
-      font-size: calc(var(--sq) * 0.74);
-      line-height: 1;
-      user-select: none;
+    /* Pieces */
+    .piece {
+      display: block;
+      width: 84%;
+      height: 84%;
       pointer-events: none;
+      stroke: var(--piece-line);
+      stroke-width: 3.5;
+      stroke-linejoin: round;
     }
-    .pc.w {
-      color: var(--surface);
-      text-shadow: 1px 0 var(--text), -1px 0 var(--text), 0 1px var(--text), 0 -1px var(--text),
-                   1px 1px var(--text), -1px -1px var(--text), 1px -1px var(--text), -1px 1px var(--text);
+    .piece.w { fill: var(--piece-white); --detail: var(--piece-line); }
+    .piece.b { fill: var(--piece-black); --detail: var(--piece-white); }
+    .piece .d { fill: var(--detail); stroke: none; }
+    .piece .d.line { fill: none; stroke: var(--detail); stroke-width: 4; stroke-linecap: round; }
+    .piece.lifted { opacity: 0.3; }
+
+    .drag-ghost {
+      position: fixed;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      z-index: 20;
+      filter: drop-shadow(0 4px 6px var(--overlay));
     }
-    .pc.b { color: var(--text); }
+    .drag-ghost .piece { width: 100%; height: 100%; }
+    body.dragging, body.dragging .sq { cursor: grabbing; }
 
     .coord {
       position: absolute;
@@ -70,17 +89,15 @@
     .coord.rank { top: 3px; left: 4px; }
     .coord.file { bottom: 2px; right: 4px; }
 
+    /* Captured pieces: fixed height so the board never moves */
     .taken {
-      min-height: 26px;
-      padding: 2px 4px;
+      height: 28px;
+      padding: 0 4px;
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 1px;
+      overflow: hidden;
     }
-    .taken .pc { font-size: 20px; }
-    .taken .pc.w { text-shadow: 1px 0 var(--text-soft), -1px 0 var(--text-soft), 0 1px var(--text-soft), 0 -1px var(--text-soft); }
-    .taken .pc.b { color: var(--text-soft); }
+    .taken .piece { width: 20px; height: 20px; margin-right: -4px; flex: none; opacity: 0.75; }
 
     .dot {
       display: inline-block;
@@ -89,10 +106,10 @@
       border-radius: 50%;
       margin-right: 6px;
       vertical-align: -1px;
-      border: 1px solid var(--text);
+      border: 1px solid var(--piece-line);
     }
-    .dot.w { background: var(--surface); }
-    .dot.b { background: var(--text); }
+    .dot.w { background: var(--piece-white); }
+    .dot.b { background: var(--piece-black); }
 
     .promo { display: flex; gap: 8px; }
     .promo button {
@@ -100,20 +117,22 @@
       height: 64px;
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      background: var(--bg);
+      background: var(--board-dark);
       cursor: pointer;
       display: grid;
       place-items: center;
-      transition: transform var(--ease), background var(--ease);
+      transition: transform var(--ease);
     }
-    .promo button:hover { transform: scale(1.05); background: var(--muted); }
-    .promo .pc { font-size: 42px; }
+    .promo button:hover { transform: scale(1.05); }
   </style>
 </head>
 <body>
   <header class="game-header">
-    <a class="back" href="../../index.html"><span class="back-btn">←</span>Chess</a>
-    <span class="score" id="status"></span>
+    <a class="back" href="../../index.html"><span class="icon-btn">←</span>Chess</a>
+    <div class="header-right">
+      <span class="score" id="status"></span>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
   </header>
 
   <main class="game-main">
@@ -146,6 +165,7 @@
     </div>
   </div>
 
+  <script src="pieces.js"></script>
   <script src="chess.js"></script>
 </body>
 </html>

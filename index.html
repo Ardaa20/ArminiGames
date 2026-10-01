@@ -5,9 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ArminiGames</title>
   <link rel="stylesheet" href="assets/theme.css">
+  <script src="assets/theme.js"></script>
   <style>
     .page { max-width: 960px; margin: 0 auto; padding: 48px 16px; }
-    h1 { font-size: 28px; font-weight: 700; margin-bottom: 32px; }
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    h1 { font-size: 28px; font-weight: 700; }
 
     .grid {
       display: grid;
@@ -29,25 +36,27 @@
     }
     .tile:hover { transform: scale(1.03); box-shadow: var(--shadow-hover); }
 
-    .tile .symbol {
-      font-family: "Segoe UI Symbol", "DejaVu Sans", "Noto Sans Symbols 2", serif;
-      font-size: 48px;
-      line-height: 1;
-      color: var(--accent);
-    }
+    .tile .symbol { width: 52px; height: 52px; fill: var(--accent); }
     .tile .name { font-size: 16px; font-weight: 600; }
   </style>
 </head>
 <body>
   <main class="page">
-    <h1>ArminiGames</h1>
+    <div class="top">
+      <h1>ArminiGames</h1>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
     <div class="grid" id="grid"></div>
   </main>
 
   <script>
-    // Add one line here for each new game
+    // Add one line here for each new game. "icon" is the inner SVG of a 0 0 100 100 viewBox.
     const GAMES = [
-      { name: "Chess", path: "games/chess/index.html", symbol: "♞︎" },
+      {
+        name: "Chess",
+        path: "games/chess/index.html",
+        icon: `<rect x="22" y="78" width="56" height="10" rx="4"/><path d="M34 78 C34 66 42 60 47 54 L34 53 C26 52 23 45 28 40 L43 26 L45 13 L54 21 C68 25 75 42 70 60 L68 78 Z"/>`,
+      },
     ];
 
     const grid = document.getElementById("grid");
@@ -55,7 +64,7 @@
       const a = document.createElement("a");
       a.className = "tile";
       a.href = game.path;
-      a.innerHTML = `<span class="symbol">${game.symbol}</span><span class="name">${game.name}</span>`;
+      a.innerHTML = `<svg class="symbol" viewBox="0 0 100 100" aria-hidden="true">${game.icon}</svg><span class="name">${game.name}</span>`;
       grid.appendChild(a);
     }
   </script>
