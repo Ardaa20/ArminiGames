@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ArminiGames</title>
+  <link rel="stylesheet" href="assets/tema.css">
+  <style>
+    .page { max-width: 960px; margin: 0 auto; padding: 48px 16px; }
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 32px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: var(--gap);
+    }
+
+    .tile {
+      aspect-ratio: 1;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: transform var(--ease), box-shadow var(--ease);
+    }
+    .tile:hover { transform: scale(1.03); box-shadow: var(--shadow-hover); }
+
+    .tile .symbol {
+      font-family: "Segoe UI Symbol", "DejaVu Sans", "Noto Sans Symbols 2", serif;
+      font-size: 48px;
+      line-height: 1;
+      color: var(--accent);
+    }
+    .tile .name { font-size: 16px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1>ArminiGames</h1>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <script>
+    // Yeni oyun eklerken buraya bir satır ekle
+    const OYUNLAR = [
+      { ad: "Satranç", yol: "oyunlar/satranc/index.html", sembol: "♞︎" },
+    ];
+
+    const grid = document.getElementById("grid");
+    for (const oyun of OYUNLAR) {
+      const a = document.createElement("a");
+      a.className = "tile";
+      a.href = oyun.yol;
+      a.innerHTML = `<span class="symbol">${oyun.sembol}</span><span class="name">${oyun.ad}</span>`;
+      grid.appendChild(a);
+    }
+  </script>
+</body>
+</html>
