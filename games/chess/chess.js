@@ -1,10 +1,10 @@
-// Satranç — aynı cihazda iki kişilik (1v1)
-// Tahta: board[r][c], r=0 siyahın arka sırası (8. yatay), r=7 beyazın (1. yatay).
-// Taşlar "wp", "bk" gibi: ilk harf renk (w/b), ikinci harf tür (p n b r q k).
+// Chess — two players on the same device (1v1)
+// Board: board[r][c], r=0 is black's back rank (rank 8), r=7 is white's (rank 1).
+// Pieces are strings like "wp", "bk": first letter is color (w/b), second is type (p n b r q k).
 
 const GLYPH = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" };
-const TEXT_STYLE = "︎"; // emoji olarak çizilmesini engeller
-const NAME = { w: "Beyaz", b: "Siyah" };
+const TEXT_STYLE = "︎"; // prevents rendering as emoji
+const NAME = { w: "White", b: "Black" };
 
 const KNIGHT = [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]];
 const ORTH = [[1, 0], [-1, 0], [0, 1], [0, -1]];
@@ -27,13 +27,13 @@ function startState() {
     board,
     turn: "w",
     castle: { wk: true, wq: true, bk: true, bq: true },
-    ep: null,       // geçerken alma karesi [r, c]
-    last: null,     // son hamle
-    captured: { w: [], b: [] }, // captured.w = beyazın aldığı taşlar
+    ep: null,       // en passant target square [r, c]
+    last: null,     // last move
+    captured: { w: [], b: [] }, // captured.w = pieces taken by white
   };
 }
 
-// ---------- Kurallar ----------
+// ---------- Rules ----------
 
 function attacked(b, r, c, by) {
   const d = by === "w" ? 1 : -1;
@@ -169,7 +169,7 @@ function insufficientMaterial(s) {
   return rest.length === 0 || (rest.length === 1 && "bn".includes(rest[0][1]));
 }
 
-// ---------- Arayüz ----------
+// ---------- UI ----------
 
 const boardEl = document.getElementById("board");
 const statusEl = document.getElementById("status");
@@ -227,7 +227,7 @@ function render() {
 
   if (!over) {
     const dot = `<span class="dot ${state.turn}"></span>`;
-    statusEl.innerHTML = dot + (check ? "Şah! " : "") + `Sıra: ${NAME[state.turn]}`;
+    statusEl.innerHTML = dot + (check ? "Check! " : "") + `${NAME[state.turn]} to move`;
   }
   document.getElementById("undo").disabled = history.length === 0;
 }
@@ -278,15 +278,15 @@ function checkEnd() {
   let title = null, text = "";
   if (!hasAnyMove(state)) {
     if (inCheck(state, state.turn)) {
-      title = "Şah mat";
-      text = `${NAME[other(state.turn)]} kazandı.`;
+      title = "Checkmate";
+      text = `${NAME[other(state.turn)]} wins.`;
     } else {
-      title = "Pat";
-      text = "Oyun berabere.";
+      title = "Stalemate";
+      text = "The game is a draw.";
     }
   } else if (insufficientMaterial(state)) {
-    title = "Berabere";
-    text = "Mat için yeterli taş kalmadı.";
+    title = "Draw";
+    text = "Not enough material to checkmate.";
   }
   if (!title) return;
 

@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap");
 
-/* TEMA.md'deki değişkenler — renkleri sadece buradan kullan */
+/* Variables from THEME.md — only use colors from here */
 :root {
   --bg:        #F6F4F0;
   --surface:   #FFFDFA;
@@ -37,7 +37,7 @@ body {
 
 a { color: inherit; text-decoration: none; }
 
-/* ---------- Oyun sayfası çerçevesi ---------- */
+/* ---------- Game page frame ---------- */
 
 .game-header {
   max-width: 960px;
@@ -111,7 +111,7 @@ a { color: inherit; text-decoration: none; }
 .btn.ghost { background: var(--surface); border: 1px solid var(--border); }
 .btn:disabled { opacity: 0.5; cursor: default; }
 
-/* ---------- Pencere (bitti / seçim) ---------- */
+/* ---------- Dialog (game over / choice) ---------- */
 
 .overlay {
   position: fixed;

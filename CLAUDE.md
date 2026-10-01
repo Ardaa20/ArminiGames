@@ -1,11 +1,12 @@
 # ArminiGames
 
-İçinde mini oyunlar olan minimalist bir web sitesi. Ana sayfada sadece yuvarlak kareler var; tıklanınca oyun açılır. Oyunlar zamanla tek tek eklenir.
+A minimalist website full of mini games. The home page has only rounded square tiles; clicking one opens a game. Games are added one at a time.
 
-**Oyun eklerken veya herhangi bir arayüz yazarken önce [TEMA.md](TEMA.md) dosyasını oku ve ona uy.**
+**Before adding a game or writing any UI, read [THEME.md](THEME.md) and follow it.**
 
-## Yapı
-- `index.html` — ana sayfa (kare ızgarası). Yeni oyun için içindeki `OYUNLAR` listesine bir satır ekle.
-- `assets/tema.css` — ortak renk değişkenleri, oyun sayfası çerçevesi (`.game-header`, `.game-box`, `.btn`, `.overlay`/`.modal`).
-- `oyunlar/<oyun-adi>/index.html` + `.js` — her oyun kendi klasöründe; geri butonu `../../index.html`'e gider.
-- Saf HTML/CSS/JS, derleme adımı yok. Bağlantılar `.../index.html` şeklinde açıkça yazılır ki dosya çift tıklanarak da açılabilsin.
+## Structure
+- `index.html` — home page (tile grid). To add a game, add one line to the `GAMES` list inside it.
+- `assets/theme.css` — shared color variables and the game page frame (`.game-header`, `.game-box`, `.btn`, `.overlay`/`.modal`).
+- `games/<game-name>/index.html` + `.js` — each game lives in its own folder; the back button links to `../../index.html`.
+- Plain HTML/CSS/JS, no build step. Links point to `.../index.html` explicitly so the site also works when opened by double-clicking the file.
+- File, folder and code names are in English; on-screen text is in Turkish.

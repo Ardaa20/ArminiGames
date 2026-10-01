@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Satranç · ArminiGames</title>
-  <link rel="stylesheet" href="../../assets/tema.css">
+  <title>Chess · ArminiGames</title>
+  <link rel="stylesheet" href="../../assets/theme.css">
   <style>
     .board {
       --size: max(min(calc(100vw - 56px), calc(100vh - 260px), 520px), 260px);
@@ -112,7 +112,7 @@
 </head>
 <body>
   <header class="game-header">
-    <a class="back" href="../../index.html"><span class="back-btn">←</span>Satranç</a>
+    <a class="back" href="../../index.html"><span class="back-btn">←</span>Chess</a>
     <span class="score" id="status"></span>
   </header>
 
@@ -123,14 +123,14 @@
       <div class="taken" id="takenBottom"></div>
     </div>
     <div class="actions">
-      <button class="btn ghost" id="undo">Geri al</button>
-      <button class="btn" id="reset">Yeni oyun</button>
+      <button class="btn ghost" id="undo">Undo</button>
+      <button class="btn" id="reset">New game</button>
     </div>
   </main>
 
   <div class="overlay" id="promoOverlay" hidden>
     <div class="modal">
-      <h2>Terfi</h2>
+      <h2>Promotion</h2>
       <div class="promo" id="promoChoices"></div>
     </div>
   </div>
@@ -140,12 +140,12 @@
       <h2 id="endTitle"></h2>
       <p id="endText"></p>
       <div class="actions">
-        <button class="btn ghost" id="endUndo">Geri al</button>
-        <button class="btn" id="endReset">Yeni oyun</button>
+        <button class="btn ghost" id="endUndo">Undo</button>
+        <button class="btn" id="endReset">New game</button>
       </div>
     </div>
   </div>
 
-  <script src="satranc.js"></script>
+  <script src="chess.js"></script>
 </body>
 </html>

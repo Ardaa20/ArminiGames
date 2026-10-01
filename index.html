@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ArminiGames</title>
-  <link rel="stylesheet" href="assets/tema.css">
+  <link rel="stylesheet" href="assets/theme.css">
   <style>
     .page { max-width: 960px; margin: 0 auto; padding: 48px 16px; }
     h1 { font-size: 28px; font-weight: 700; margin-bottom: 32px; }
@@ -45,17 +45,17 @@
   </main>
 
   <script>
-    // Yeni oyun eklerken buraya bir satır ekle
-    const OYUNLAR = [
-      { ad: "Satranç", yol: "oyunlar/satranc/index.html", sembol: "♞︎" },
+    // Add one line here for each new game
+    const GAMES = [
+      { name: "Chess", path: "games/chess/index.html", symbol: "♞︎" },
     ];
 
     const grid = document.getElementById("grid");
-    for (const oyun of OYUNLAR) {
+    for (const game of GAMES) {
       const a = document.createElement("a");
       a.className = "tile";
-      a.href = oyun.yol;
-      a.innerHTML = `<span class="symbol">${oyun.sembol}</span><span class="name">${oyun.ad}</span>`;
+      a.href = game.path;
+      a.innerHTML = `<span class="symbol">${game.symbol}</span><span class="name">${game.name}</span>`;
       grid.appendChild(a);
     }
   </script>
