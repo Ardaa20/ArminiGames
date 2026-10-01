@@ -349,7 +349,10 @@ function tryMove(m) {
 
 function commit(m, promo) {
   history.push(state);
+  const before = state.captured[state.turn].length;
   state = applyMove(state, m, promo);
+  if (state.captured[other(state.turn)].length > before) Sound.capture();
+  else Sound.move();
   selected = null;
   targets = [];
   render();
@@ -357,11 +360,12 @@ function commit(m, promo) {
 }
 
 function checkEnd() {
-  let title = null, text = "";
+  let title = null, text = "", won = false;
   if (!hasAnyMove(state)) {
     if (inCheck(state, state.turn)) {
       title = "Checkmate";
       text = `${NAME[other(state.turn)]} wins.`;
+      won = true;
     } else {
       title = "Stalemate";
       text = "The game is a draw.";
@@ -373,6 +377,8 @@ function checkEnd() {
   if (!title) return;
 
   over = true;
+  if (won) Sound.win();
+  else Sound.draw();
   statusEl.textContent = title;
   document.getElementById("endTitle").textContent = title;
   document.getElementById("endText").textContent = text;

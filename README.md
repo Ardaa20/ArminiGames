@@ -23,6 +23,7 @@ No install or build step — it's plain HTML, CSS and JavaScript.
 index.html          Home page (tile grid)
 assets/theme.css    Shared colors (light + dark), fonts and game page frame
 assets/theme.js     Light / dark mode toggle
+assets/sound.js     Soft sound effects (Web Audio, no files)
 games/<name>/       One folder per game (index.html + script)
 THEME.md            Visual rules every game follows
 ```
