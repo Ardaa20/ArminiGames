@@ -12,8 +12,21 @@ const nextEl = document.getElementById("next");
 const msgEl = document.getElementById("msg");
 const statusEl = document.getElementById("status");
 const endOverlay = document.getElementById("endOverlay");
+const undoBtn = document.getElementById("undo");
 
 let board, turn, over, last, note, busy;
+let history = []; // snapshots taken before each move, for Undo
+let timers = [];  // pending animation timeouts, cleared on New game / Undo
+
+// setTimeout that New game and Undo can cancel, so a stale animation
+// never changes the turn of a fresh position.
+function later(fn, ms) {
+  timers.push(setTimeout(fn, ms));
+}
+function clearTimers() {
+  timers.forEach(clearTimeout);
+  timers = [];
+}
 let drag = null; // { x, y, moved, ghost, hover }
 
 const other = (col) => (col === "b" ? "w" : "b");
@@ -71,7 +84,17 @@ function discEl(col) {
   return d;
 }
 
+// Rebuild every disc from the board array (no animation).
+function syncDiscs() {
+  for (let r = 0; r < N; r++)
+    for (let c = 0; c < N; c++) {
+      cells[r][c].replaceChildren();
+      if (board[r][c]) cells[r][c].appendChild(discEl(board[r][c]));
+    }
+}
+
 function newGame() {
+  clearTimers();
   board = Array.from({ length: N }, () => Array(N).fill(null));
   board[3][3] = board[4][4] = "w";
   board[3][4] = board[4][3] = "b";
@@ -80,12 +103,25 @@ function newGame() {
   last = null;
   note = "";
   busy = false;
+  history = [];
   endOverlay.hidden = true;
-  for (let r = 0; r < N; r++)
-    for (let c = 0; c < N; c++) {
-      cells[r][c].replaceChildren();
-      if (board[r][c]) cells[r][c].appendChild(discEl(board[r][c]));
-    }
+  syncDiscs();
+  render();
+}
+
+// Undo is silent: it takes back the last move, cancelling any running flip.
+function undo() {
+  if (!history.length) return;
+  clearTimers();
+  const h = history.pop();
+  board = h.board;
+  turn = h.turn;
+  last = h.last;
+  note = h.note;
+  over = false;
+  busy = false;
+  endOverlay.hidden = true;
+  syncDiscs();
   render();
 }
 
@@ -106,6 +142,7 @@ function render() {
     `<span class="count"><span class="dot b"></span>${b}</span>` +
     `<span class="count"><span class="dot w"></span>${w}</span>`;
 
+  undoBtn.disabled = !history.length;
   nextEl.replaceChildren(discEl(turn));
   nextEl.classList.toggle("off", over);
   nextEl.classList.toggle("lifted", !!drag && drag.moved);
@@ -121,6 +158,7 @@ function play(r, c) {
   const flips = flipsFor(board, r, c, turn);
   if (!flips.length) return;
 
+  history.push({ board: board.map((row) => row.slice()), turn, last, note });
   board[r][c] = turn;
   for (const [fr, fc] of flips) board[fr][fc] = turn;
   last = [r, c];
@@ -137,12 +175,12 @@ function play(r, c) {
   for (const [fr, fc] of flips) {
     const d = cells[fr][fc].firstChild;
     d.classList.add("flipping");
-    setTimeout(() => { d.classList.remove("b", "w"); d.classList.add(mover); }, FLIP_MS / 2);
+    later(() => { d.classList.remove("b", "w"); d.classList.add(mover); }, FLIP_MS / 2);
   }
-  setTimeout(() => Sound.capture(), 120);
+  later(() => Sound.capture(), 120);
   render();
 
-  setTimeout(() => {
+  later(() => {
     for (const [fr, fc] of flips) cells[fr][fc].firstChild.classList.remove("flipping");
     placed.classList.remove("placed");
     busy = false;
@@ -176,7 +214,7 @@ function finish() {
     Sound.win();
   }
   text.textContent = `Black ${b} · White ${w}`;
-  setTimeout(() => { if (over) endOverlay.hidden = false; }, 500);
+  later(() => { if (over) endOverlay.hidden = false; }, 500);
 }
 
 // ---------- Input: tap a cell, or drag the next disc onto a cell ----------
@@ -246,6 +284,7 @@ window.addEventListener("pointercancel", () => {
 
 document.getElementById("reset").addEventListener("click", newGame);
 document.getElementById("endReset").addEventListener("click", newGame);
-document.getElementById("endClose").addEventListener("click", () => { endOverlay.hidden = true; });
+undoBtn.addEventListener("click", undo);
+document.getElementById("endUndo").addEventListener("click", undo);
 
 newGame();

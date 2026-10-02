@@ -113,14 +113,23 @@
     body.dragging, body.dragging .cell { cursor: grabbing; }
 
     /* Counts in the header */
-    .count { display: inline-flex; align-items: center; gap: 6px; }
-    .count + .count { margin-left: 12px; }
+    /* Each count sits on a small board-colored chip so both discs stand out in light and dark mode */
+    .count {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px 3px 4px;
+      border-radius: var(--radius-sm);
+      background: var(--board-dark);
+      color: var(--text);
+    }
+    .count + .count { margin-left: 8px; }
     .dot {
       display: inline-block;
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      border: 1px solid var(--text-soft);
+      border: 1px solid var(--piece-line);
     }
     .dot.b { background: var(--piece-black); }
     .dot.w { background: var(--piece-white); }
@@ -144,6 +153,7 @@
       <div class="board" id="board"></div>
     </div>
     <div class="actions">
+      <button class="btn ghost" id="undo">Undo</button>
       <button class="btn" id="reset">New game</button>
     </div>
   </main>
@@ -153,7 +163,7 @@
       <h2 id="endTitle"></h2>
       <p id="endText"></p>
       <div class="actions">
-        <button class="btn ghost" id="endClose">View board</button>
+        <button class="btn ghost" id="endUndo">Undo</button>
         <button class="btn" id="endReset">New game</button>
       </div>
     </div>
