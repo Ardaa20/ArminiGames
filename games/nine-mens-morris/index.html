@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nine Men's Morris · ArminiGames</title>
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <script src="../../assets/theme.js"></script>
+  <style>
+    /* Fixed header height: the status may wrap on narrow screens without moving the board */
+    .game-header { height: 80px; }
+    #status { text-align: right; line-height: 1.3; }
+
+    /* Fixed board: 7 cells of 60px, only shrinks when the screen is too narrow */
+    .board {
+      --cell: min(60px, calc((100vw - 56px) / 7));
+      position: relative;
+      width: calc(var(--cell) * 7);
+      height: calc(var(--cell) * 7);
+      border-radius: var(--radius-sm);
+      background: var(--board-light);
+      touch-action: none;
+      user-select: none;
+    }
+
+    .lines {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .lines path {
+      fill: none;
+      stroke: var(--text-soft);
+      stroke-width: 4;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+    .lines circle { fill: var(--text-soft); }
+
+    .pt {
+      position: absolute;
+      width: var(--cell);
+      height: var(--cell);
+      transform: translate(-50%, -50%);
+      display: grid;
+      place-items: center;
+    }
+    .pt::before {
+      content: "";
+      position: absolute;
+      width: 88%;
+      height: 88%;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .pt.last::before { background: color-mix(in srgb, var(--accent) 35%, var(--board-light)); }
+    .pt.sel::before  { background: color-mix(in srgb, var(--accent) 65%, var(--board-light)); }
+    .pt.own { cursor: grab; }
+    .pt.place, .pt.target, .pt.removable { cursor: pointer; }
+
+    .pt.target::after {
+      content: "";
+      position: absolute;
+      width: 28%;
+      height: 28%;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+    .pt.removable::after {
+      content: "";
+      position: absolute;
+      width: 90%;
+      height: 90%;
+      border-radius: 50%;
+      border: 3px solid var(--accent-3);
+      pointer-events: none;
+    }
+    .pt.hover::after {
+      content: "";
+      position: absolute;
+      width: 90%;
+      height: 90%;
+      border-radius: 50%;
+      background: transparent;
+      opacity: 1;
+      border: 3px solid var(--accent);
+      pointer-events: none;
+    }
+
+    /* Pieces */
+    .piece {
+      position: relative;
+      display: block;
+      width: 78%;
+      height: 78%;
+      pointer-events: none;
+      stroke: var(--piece-line);
+      stroke-width: 3.5;
+      stroke-linejoin: round;
+    }
+    .piece.w { fill: var(--piece-white); --detail: var(--piece-line); }
+    .piece.b { fill: var(--piece-black); --detail: var(--piece-white); }
+    .piece .d { fill: none; stroke: var(--detail); stroke-width: 3; }
+    .piece.lifted { opacity: 0.3; }
+
+    .drag-ghost {
+      position: fixed;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      z-index: 20;
+      filter: drop-shadow(0 4px 6px var(--overlay));
+      display: grid;
+      place-items: center;
+    }
+    .drag-ghost .piece { width: 100%; height: 100%; }
+    body.dragging, body.dragging .pt { cursor: grabbing; }
+
+    /* Pieces left to place: fixed height so the board never moves */
+    .reserve {
+      height: 36px;
+      padding: 0 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      touch-action: none;
+      user-select: none;
+    }
+    .reserve .stack { display: flex; align-items: center; height: 100%; }
+    .reserve .piece { width: 24px; height: 24px; margin-right: -6px; flex: none; }
+    .reserve .count { margin-left: auto; }
+    .reserve.idle .stack { opacity: 0.7; }
+    .reserve.active .stack { cursor: grab; }
+
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: -1px;
+      border: 1px solid var(--piece-line);
+    }
+    .dot.w { background: var(--piece-white); }
+    .dot.b { background: var(--piece-black); }
+  </style>
+</head>
+<body>
+  <header class="game-header">
+    <a class="back" href="../../index.html"><span class="icon-btn">←</span>Nine Men's Morris</a>
+    <div class="header-right">
+      <span class="score" id="status"></span>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
+  </header>
+
+  <main class="game-main">
+    <div class="game-box">
+      <div class="reserve" id="reserveB"></div>
+      <div class="board" id="board"></div>
+      <div class="reserve" id="reserveW"></div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="undo">Undo</button>
+      <button class="btn" id="reset">New game</button>
+    </div>
+  </main>
+
+  <div class="overlay" id="endOverlay" hidden>
+    <div class="modal">
+      <h2 id="endTitle"></h2>
+      <p id="endText"></p>
+      <div class="actions">
+        <button class="btn ghost" id="endUndo">Undo</button>
+        <button class="btn" id="endReset">New game</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/sound.js"></script>
+  <script src="nine-mens-morris.js"></script>
+</body>
+</html>
