@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tic-tac-toe · ArminiGames</title>
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <script src="../../assets/theme.js"></script>
+  <style>
+    /* Fixed cell size: 96px everywhere, only shrinks when the screen is too narrow */
+    .play {
+      --cell: min(96px, calc((100vw - 88px) / 3));
+      --line: 8px;
+      user-select: none;
+    }
+
+    /* Row above the board with the next mark (fixed height, can be dragged) */
+    .next {
+      height: 48px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+    .next .handle {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      display: grid;
+      place-items: center;
+      cursor: grab;
+      touch-action: none;
+      transition: opacity var(--ease);
+    }
+    .next .handle.lifted { opacity: 0.3; }
+    .next .handle.hidden { visibility: hidden; }
+    .next .handle .mark { width: 34px; height: 34px; }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, var(--cell));
+      grid-template-rows: repeat(3, var(--cell));
+      gap: var(--line);
+      padding: var(--line);
+      background: var(--muted);
+      border-radius: var(--radius-sm);
+      touch-action: none;
+    }
+
+    .cell {
+      width: var(--cell);
+      height: var(--cell);
+      border-radius: 8px;
+      background: var(--surface);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: background var(--ease), box-shadow var(--ease);
+    }
+    .cell.filled, .board.locked .cell { cursor: default; }
+    .cell.drop-target { box-shadow: inset 0 0 0 3px var(--accent); }
+    /* Winning line: tinted with the winner's own tone */
+    .board.won-x .cell.win { background: color-mix(in srgb, var(--accent) 28%, var(--surface)); }
+    .board.won-o .cell.win { background: color-mix(in srgb, var(--accent-3) 28%, var(--surface)); }
+
+    /* Marks: rounded strokes, one accent tone each */
+    .mark {
+      display: block;
+      width: 70%;
+      height: 70%;
+      pointer-events: none;
+      transition: opacity var(--ease);
+    }
+    .mark path, .mark circle {
+      fill: none;
+      stroke-width: 12;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .mark.x path { stroke: var(--accent); }
+    .mark.o circle { stroke: var(--accent-3); }
+    .board.won .cell:not(.win) .mark { opacity: 0.3; }
+
+    /* Soft preview of the next mark on the empty cell under the mouse */
+    .cell .mark.ghost { opacity: 0; }
+    @media (hover: hover) {
+      .board:not(.locked) .cell:not(.filled):hover .mark.ghost { opacity: 0.25; }
+    }
+    body.dragging .cell .mark.ghost { opacity: 0 !important; }
+
+    .drag-ghost {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 64px;
+      height: 64px;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .drag-ghost .mark { width: 100%; height: 100%; }
+    body.dragging, body.dragging * { cursor: grabbing !important; }
+
+    /* Fixed-height message line so nothing moves when the game ends */
+    .message {
+      height: 20px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+  </style>
+</head>
+<body>
+  <header class="game-header">
+    <a class="back" href="../../index.html"><span class="icon-btn">←</span>Tic-tac-toe</a>
+    <div class="header-right">
+      <span class="score" id="status"></span>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
+  </header>
+
+  <main class="game-main">
+    <div class="game-box">
+      <div class="play">
+        <div class="next" id="next"></div>
+        <div class="board" id="board"></div>
+      </div>
+    </div>
+    <div class="message" id="message"></div>
+    <div class="actions">
+      <button class="btn" id="reset">New game</button>
+    </div>
+  </main>
+
+  <script src="../../assets/sound.js"></script>
+  <script src="tic-tac-toe.js"></script>
+</body>
+</html>
