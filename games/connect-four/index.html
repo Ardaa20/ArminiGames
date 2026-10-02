@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Connect Four · ArminiGames</title>
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <script src="../../assets/theme.js"></script>
+  <style>
+    /* Fixed cell size: 56px everywhere, only shrinks when the screen is too narrow */
+    .play {
+      --cell: min(56px, calc((100vw - 68px) / 7));
+      --frame: 6px;
+      touch-action: none;
+      user-select: none;
+    }
+
+    /* Row above the board where the next disc waits (fixed height) */
+    .preview {
+      position: relative;
+      height: var(--cell);
+      margin: 0 var(--frame) 4px;
+    }
+    .preview .disc {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transition: transform var(--ease), opacity var(--ease);
+    }
+    .preview .disc.hidden { opacity: 0; }
+    .preview .disc.lifted { opacity: 0.3; }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(7, var(--cell));
+      grid-template-rows: repeat(6, var(--cell));
+      padding: var(--frame);
+      background: var(--board-dark);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+    }
+    .board.locked { cursor: default; }
+
+    .cell {
+      position: relative;
+      width: var(--cell);
+      height: var(--cell);
+      display: grid;
+      place-items: center;
+    }
+    /* The hole */
+    .cell::before {
+      content: "";
+      position: absolute;
+      width: 80%;
+      height: 80%;
+      border-radius: 50%;
+      background: var(--surface);
+    }
+    .cell.col-hover::before {
+      background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+    }
+    .cell.drop-target::before { box-shadow: inset 0 0 0 3px var(--accent); }
+
+    /* Discs: flat circles with one outline and a small inner ring; two accent tones */
+    .disc {
+      position: relative;
+      display: block;
+      width: var(--cell);
+      height: var(--cell);
+      pointer-events: none;
+      transition: opacity var(--ease);
+    }
+    .disc svg { display: block; width: 100%; height: 100%; }
+    .disc .body { stroke: var(--piece-line); stroke-width: 3; }
+    .disc.p1 .body { fill: var(--accent); }
+    .disc.p2 .body { fill: var(--accent-3); }
+    .disc .ring { fill: none; stroke: var(--on-accent); stroke-width: 2.5; opacity: 0.3; }
+    .disc .mark { fill: var(--on-accent); opacity: 0; }
+
+    /* Winning four: a dot in the middle, the other discs fade back */
+    .board.won .cell:not(.win) .disc { opacity: 0.35; }
+    .cell.win .disc .mark { opacity: 0.75; }
+
+    .drag-ghost {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: var(--cell);
+      height: var(--cell);
+      pointer-events: none;
+      z-index: 20;
+      filter: drop-shadow(0 4px 6px var(--overlay));
+    }
+    body.dragging, body.dragging .board { cursor: grabbing; }
+
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: -1px;
+      border: 1px solid var(--piece-line);
+    }
+    .dot.p1 { background: var(--accent); }
+    .dot.p2 { background: var(--accent-3); }
+
+    /* Fixed-height message line so nothing moves when the game ends */
+    .message {
+      height: 20px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+  </style>
+</head>
+<body>
+  <header class="game-header">
+    <a class="back" href="../../index.html"><span class="icon-btn">←</span>Connect Four</a>
+    <div class="header-right">
+      <span class="score" id="status"></span>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
+  </header>
+
+  <main class="game-main">
+    <div class="game-box">
+      <div class="play" id="play">
+        <div class="preview" id="preview"></div>
+        <div class="board" id="board"></div>
+      </div>
+    </div>
+    <div class="message" id="message"></div>
+    <div class="actions">
+      <button class="btn ghost" id="undo">Undo</button>
+      <button class="btn" id="reset">New game</button>
+    </div>
+  </main>
+
+  <script src="../../assets/sound.js"></script>
+  <script src="connect-four.js"></script>
+</body>
+</html>
