@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Go · ArminiGames</title>
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <script src="../../assets/theme.js"></script>
+  <style>
+    /* Fixed cell size: 44px everywhere, only shrinks when the screen is too narrow */
+    .board {
+      --cell: min(44px, calc((100vw - 56px) / 9));
+      display: grid;
+      grid-template-columns: repeat(9, var(--cell));
+      grid-template-rows: repeat(9, var(--cell));
+      background: var(--board-dark);
+      border-radius: var(--radius-sm);
+      touch-action: none;
+      user-select: none;
+      cursor: pointer;
+      position: relative;
+    }
+    .board.over { cursor: default; }
+
+    /* Grid lines are one SVG behind the points so every line has the same width */
+    .lines {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      fill: var(--text-soft);
+    }
+    .lines path { stroke: var(--text-soft); stroke-width: 1; vector-effect: non-scaling-stroke; }
+
+    /* Each cell is one intersection */
+    .pt {
+      position: relative;
+      width: var(--cell);
+      height: var(--cell);
+      display: grid;
+      place-items: center;
+    }
+    .pt.hover { box-shadow: inset 0 0 0 2px var(--accent); border-radius: 50%; }
+
+    /* Stones: flat circles with one outline color */
+    .stone {
+      position: relative;
+      z-index: 1;
+      width: 88%;
+      height: 88%;
+      border-radius: 50%;
+      border: 1.5px solid var(--piece-line);
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+    .stone.b { background: var(--piece-black); --detail: var(--piece-white); }
+    .stone.w { background: var(--piece-white); --detail: var(--piece-line); }
+    .stone.preview { opacity: 0.35; }
+    .stone.lifted { opacity: 0.3; }
+    .stone.dead { opacity: 0.35; }
+
+    /* Last placed stone: a small ring in the opposite color */
+    .stone.last::after {
+      content: "";
+      width: 34%;
+      height: 34%;
+      border-radius: 50%;
+      border: 1.5px solid var(--detail);
+    }
+
+    /* Territory marks after the game: a small rounded square in the owner's color */
+    .terr {
+      position: absolute;
+      z-index: 2;
+      width: 30%;
+      height: 30%;
+      border-radius: 3px;
+      border: 1px solid var(--piece-line);
+      pointer-events: none;
+    }
+    .terr.b { background: var(--piece-black); }
+    .terr.w { background: var(--piece-white); }
+
+    /* Row above the board: fixed height so the board never moves */
+    .next {
+      height: 44px;
+      padding: 0 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-soft);
+      white-space: nowrap;
+    }
+    .next .slot {
+      width: 32px;
+      height: 32px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      cursor: grab;
+      touch-action: none;
+    }
+    .next .slot .stone { width: 100%; height: 100%; }
+    .next.off .slot { cursor: default; }
+    .next .text { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+    .next .side { flex: none; }
+
+    .drag-ghost {
+      position: fixed;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      z-index: 20;
+      filter: drop-shadow(0 4px 6px var(--overlay));
+    }
+    .drag-ghost .stone { width: 100%; height: 100%; }
+    body.dragging, body.dragging .board, body.dragging .slot { cursor: grabbing; }
+
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin: 0 4px 0 6px;
+      vertical-align: -1px;
+      border: 1px solid var(--piece-line);
+    }
+    .dot:first-child { margin-left: 0; }
+    .dot.w { background: var(--piece-white); }
+    .dot.b { background: var(--piece-black); }
+
+    .actions { flex-wrap: wrap; justify-content: center; }
+  </style>
+</head>
+<body>
+  <header class="game-header">
+    <a class="back" href="../../index.html"><span class="icon-btn">←</span>Go</a>
+    <div class="header-right">
+      <span class="score" id="status"></span>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
+  </header>
+
+  <main class="game-main">
+    <div class="game-box">
+      <div class="next" id="next">
+        <div class="slot" id="nextSlot"></div>
+        <span class="text" id="nextText"></span>
+        <span class="side" id="side"></span>
+      </div>
+      <div class="board" id="board"></div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="undo">Undo</button>
+      <button class="btn ghost" id="pass">Pass</button>
+      <button class="btn" id="reset">New game</button>
+    </div>
+  </main>
+
+  <script src="../../assets/sound.js"></script>
+  <script src="go.js"></script>
+</body>
+</html>
