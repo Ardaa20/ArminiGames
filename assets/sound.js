@@ -14,40 +14,54 @@ const Sound = (function () {
     return ctx;
   }
 
-  // A soft wooden "tock": a filtered noise click plus a low falling tone.
-  function knock(when, volume, pitch) {
+  // A wooden piece set down on a board: a very short bright click (the contact)
+  // plus a few quickly fading inharmonic tones (the wood ringing). No low thump.
+  function woodClick(when, volume, tone) {
     const a = audio();
     if (!a) return;
     const t = a.currentTime + when;
 
-    const len = Math.floor(a.sampleRate * 0.05);
+    const out = a.createGain();
+    out.gain.value = volume;
+    out.connect(a.destination);
+
+    // Contact click: ~8 ms of filtered noise
+    const len = Math.floor(a.sampleRate * 0.008);
     const buffer = a.createBuffer(1, len, a.sampleRate);
     const data = buffer.getChannelData(0);
-    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
-
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
     const noise = a.createBufferSource();
     noise.buffer = buffer;
-    const band = a.createBiquadFilter();
-    band.type = "bandpass";
-    band.frequency.value = 1600;
-    band.Q.value = 1.2;
-    const noiseGain = a.createGain();
-    noiseGain.gain.setValueAtTime(volume * 0.5, t);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-    noise.connect(band).connect(noiseGain).connect(a.destination);
+    const hp = a.createBiquadFilter();
+    hp.type = "highpass";
+    hp.frequency.value = 1200;
+    const bp = a.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.frequency.value = tone * 3.2;
+    bp.Q.value = 0.9;
+    const clickGain = a.createGain();
+    clickGain.gain.value = 0.9;
+    noise.connect(hp).connect(bp).connect(clickGain).connect(out);
     noise.start(t);
 
-    const osc = a.createOscillator();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(pitch, t);
-    osc.frequency.exponentialRampToValueAtTime(pitch * 0.6, t + 0.09);
-    const oscGain = a.createGain();
-    oscGain.gain.setValueAtTime(0.0001, t);
-    oscGain.gain.exponentialRampToValueAtTime(volume, t + 0.004);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
-    osc.connect(oscGain).connect(a.destination);
-    osc.start(t);
-    osc.stop(t + 0.13);
+    // Wood body: inharmonic partials, the higher ones die faster
+    const modes = [
+      { ratio: 1.0,  gain: 0.45, decay: 0.045 },
+      { ratio: 2.32, gain: 0.22, decay: 0.028 },
+      { ratio: 3.86, gain: 0.12, decay: 0.018 },
+    ];
+    for (const m of modes) {
+      const osc = a.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = tone * m.ratio;
+      const g = a.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(m.gain, t + 0.0015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + m.decay * 2.5);
+      osc.connect(g).connect(out);
+      osc.start(t);
+      osc.stop(t + m.decay * 2.5 + 0.01);
+    }
   }
 
   // A gentle bell-like note.
@@ -68,8 +82,9 @@ const Sound = (function () {
   }
 
   return {
-    move() { knock(0, 0.28, 190); },
-    capture() { knock(0, 0.34, 160); knock(0.05, 0.18, 220); },
+    move() { woodClick(0, 0.55, 880); },
+    // Two clicks close together: the taken piece knocked, then the piece landing
+    capture() { woodClick(0, 0.45, 1050); woodClick(0.045, 0.6, 820); },
     // Rising major arpeggio
     win() { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => note(0.15 + i * 0.11, f, 0.6, 0.12)); },
     // Two calm notes for a draw
