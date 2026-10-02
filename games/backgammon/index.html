@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Backgammon · ArminiGames</title>
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <script src="../../assets/theme.js"></script>
+  <style>
+    /* Fixed board size: 590px wide everywhere, only shrinks when the screen is too narrow.
+       The SVG viewBox is 590 x 444, so the height follows the width. */
+    .board {
+      --bw: min(590px, calc(100vw - 56px));
+      width: var(--bw);
+      height: calc(var(--bw) * 444 / 590);
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .board svg { display: block; width: 100%; height: 100%; }
+
+    /* Board parts */
+    .frame { fill: var(--muted); }
+    .field { fill: var(--board-light); }
+    .tri { stroke: none; }
+    .tri.a { fill: color-mix(in srgb, var(--accent) 35%, var(--board-light)); }
+    .tri.b { fill: var(--board-dark); }
+    .tri.hover, .pocket.hover { stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; }
+    .pocket { fill: var(--board-light); }
+    .pocket.target { fill: color-mix(in srgb, var(--accent) 30%, var(--board-light)); }
+    .own { cursor: grab; }
+    .target { cursor: pointer; }
+    .mark { fill: var(--accent); opacity: 0.85; pointer-events: none; }
+    .mark.hit { fill: none; stroke: var(--accent); stroke-width: 3.5; opacity: 1; }
+
+    /* Checkers */
+    .checker { stroke: var(--piece-line); stroke-width: 2; stroke-linejoin: round; pointer-events: none; }
+    .checker.w { fill: var(--piece-white); --detail: var(--piece-line); }
+    .checker.b { fill: var(--piece-black); --detail: var(--piece-white); }
+    .checker .d { fill: none; stroke: var(--detail); stroke-width: 1.5; opacity: 0.5; }
+    .checker.sel > .body { stroke: var(--accent); stroke-width: 4; }
+    .checker.lifted { opacity: 0.3; }
+    .slab { stroke: var(--piece-line); stroke-width: 1.5; }
+    .slab.w { fill: var(--piece-white); }
+    .slab.b { fill: var(--piece-black); }
+
+    /* Dice */
+    .die rect { stroke: var(--piece-line); stroke-width: 2; stroke-linejoin: round; }
+    .die.w rect { fill: var(--piece-white); }
+    .die.w circle { fill: var(--piece-line); }
+    .die.b rect { fill: var(--piece-black); }
+    .die.b circle { fill: var(--piece-white); }
+    .die.used { opacity: 0.3; }
+
+    .drag-ghost {
+      position: fixed;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      z-index: 20;
+      filter: drop-shadow(0 4px 6px var(--overlay));
+    }
+    .drag-ghost svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    body.dragging, body.dragging .board * { cursor: grabbing; }
+
+    /* Message line under the board: fixed height so nothing moves */
+    .note {
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-soft);
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .actions .btn { min-width: 96px; }
+
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: -1px;
+      border: 1px solid var(--piece-line);
+    }
+    .dot.w { background: var(--piece-white); }
+    .dot.b { background: var(--piece-black); }
+  </style>
+</head>
+<body>
+  <header class="game-header">
+    <a class="back" href="../../index.html"><span class="icon-btn">←</span>Backgammon</a>
+    <div class="header-right">
+      <span class="score" id="status"></span>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
+  </header>
+
+  <main class="game-main">
+    <div class="game-box">
+      <div class="board" id="board"></div>
+      <div class="note" id="note"></div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="undo">Undo</button>
+      <button class="btn" id="main">Roll</button>
+      <button class="btn ghost" id="reset">New game</button>
+    </div>
+  </main>
+
+  <div class="overlay" id="endOverlay" hidden>
+    <div class="modal">
+      <h2 id="endTitle"></h2>
+      <p id="endText"></p>
+      <div class="actions">
+        <button class="btn ghost" id="endUndo">Undo</button>
+        <button class="btn" id="endReset">New game</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/sound.js"></script>
+  <script src="backgammon.js"></script>
+</body>
+</html>
