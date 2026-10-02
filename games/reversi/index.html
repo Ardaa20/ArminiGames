@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reversi · ArminiGames</title>
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <script src="../../assets/theme.js"></script>
+  <style>
+    /* Fixed cell size: 56px everywhere, only shrinks when the screen is too narrow.
+       56px = page gutters (2 x 16px) + game box padding (2 x 12px); 14px = 7 grid gaps. */
+    .board {
+      --cell: min(56px, calc((100vw - 56px - 14px) / 8));
+      display: grid;
+      grid-template-columns: repeat(8, var(--cell));
+      grid-template-rows: repeat(8, var(--cell));
+      gap: 2px;
+      background: var(--board-light);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .cell {
+      position: relative;
+      width: var(--cell);
+      height: var(--cell);
+      background: var(--board-dark);
+      display: grid;
+      place-items: center;
+    }
+    .cell.legal { cursor: pointer; }
+    .cell.legal::after {
+      content: "";
+      position: absolute;
+      width: 22%;
+      height: 22%;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+    .cell.hover { box-shadow: inset 0 0 0 3px var(--accent); }
+    .cell.hover::after { opacity: 0; }
+
+    /* Discs: flat CSS circles, colors only from tokens */
+    .disc {
+      width: 78%;
+      height: 78%;
+      border-radius: 50%;
+      border: 2px solid var(--piece-line);
+      pointer-events: none;
+    }
+    .disc.b { background: var(--piece-black); }
+    .disc.w { background: var(--piece-white); }
+    .disc.last { box-shadow: 0 0 0 3px var(--accent); }
+    .disc.placed { animation: place 200ms ease; }
+    .disc.flipping { animation: flip 360ms ease-in-out; }
+
+    @keyframes place {
+      from { transform: scale(0.6); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    @keyframes flip {
+      0%   { transform: scaleX(1); }
+      50%  { transform: scaleX(0.05); }
+      100% { transform: scaleX(1); }
+    }
+
+    /* Turn bar above the board: fixed height so the board never moves */
+    .bar {
+      height: 48px;
+      padding: 0 4px 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .next {
+      width: 38px;
+      height: 38px;
+      padding: 4px;
+      flex: none;
+      border-radius: var(--radius-sm);
+      background: var(--board-dark);
+      display: grid;
+      place-items: center;
+      touch-action: none;
+      cursor: grab;
+    }
+    .next .disc { width: 100%; height: 100%; }
+    .next.lifted { opacity: 0.3; }
+    .next.off { cursor: default; opacity: 0.4; }
+    .msg {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-soft);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .drag-ghost {
+      position: fixed;
+      left: 0;
+      top: 0;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      z-index: 20;
+      filter: drop-shadow(0 4px 6px var(--overlay));
+    }
+    body.dragging, body.dragging .cell { cursor: grabbing; }
+
+    /* Counts in the header */
+    .count { display: inline-flex; align-items: center; gap: 6px; }
+    .count + .count { margin-left: 12px; }
+    .dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1px solid var(--text-soft);
+    }
+    .dot.b { background: var(--piece-black); }
+    .dot.w { background: var(--piece-white); }
+  </style>
+</head>
+<body>
+  <header class="game-header">
+    <a class="back" href="../../index.html"><span class="icon-btn">←</span>Reversi</a>
+    <div class="header-right">
+      <span class="score" id="status"></span>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
+  </header>
+
+  <main class="game-main">
+    <div class="game-box">
+      <div class="bar">
+        <div class="next" id="next" title="Drag onto the board"></div>
+        <span class="msg" id="msg"></span>
+      </div>
+      <div class="board" id="board"></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="reset">New game</button>
+    </div>
+  </main>
+
+  <div class="overlay" id="endOverlay" hidden>
+    <div class="modal">
+      <h2 id="endTitle"></h2>
+      <p id="endText"></p>
+      <div class="actions">
+        <button class="btn ghost" id="endClose">View board</button>
+        <button class="btn" id="endReset">New game</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/sound.js"></script>
+  <script src="reversi.js"></script>
+</body>
+</html>
