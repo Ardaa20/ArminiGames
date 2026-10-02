@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mangala · ArminiGames</title>
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <script src="../../assets/theme.js"></script>
+  <style>
+    /* Fixed pit size: 56px everywhere, only shrinks when the screen is too narrow.
+       8 columns (store, 6 pits, store) + 7 gaps + board and box padding must fit. */
+    .play {
+      --gap-pit: 6px;
+      --frame: 8px;
+      --pit: min(56px, calc((100vw - 32px - 24px - 2 * var(--frame) - 7 * var(--gap-pit)) / 8));
+      user-select: none;
+    }
+
+    .labels,
+    .board {
+      display: grid;
+      grid-template-columns: repeat(8, var(--pit));
+      column-gap: var(--gap-pit);
+    }
+    .labels { padding: 0 var(--frame); height: 22px; align-items: center; }
+    .labels.top { margin-bottom: 4px; }
+    .labels.bottom { margin-top: 4px; }
+
+    .count {
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-soft);
+      transition: color var(--ease);
+    }
+    .labels.active .count { color: var(--text); }
+    .count.bank { font-weight: 700; color: var(--text); }
+
+    .board {
+      grid-template-rows: var(--pit) var(--pit);
+      row-gap: var(--gap-pit);
+      padding: var(--frame);
+      background: var(--board-dark);
+      border-radius: var(--radius-sm);
+      touch-action: none;
+    }
+
+    .pit,
+    .store {
+      position: relative;
+      background: var(--surface);
+      transition: box-shadow var(--ease), background var(--ease);
+    }
+    .pit { width: var(--pit); height: var(--pit); border-radius: 50%; }
+    .store { grid-row: 1 / span 2; border-radius: calc(var(--pit) / 2); }
+    .store.p1 { box-shadow: inset 0 0 0 2px var(--accent); }
+    .store.p2 { box-shadow: inset 0 0 0 2px var(--accent-3); }
+
+    .pit svg,
+    .store svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* Stones: flat circles with one outline */
+    .stone { fill: var(--piece-white); stroke: var(--piece-line); stroke-width: 2.5; }
+
+    /* Pits the current player may pick */
+    .pit.playable { cursor: pointer; }
+    .pit.playable.p1:hover,
+    .pit.playable.p1.pressed { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); }
+    .pit.playable.p2:hover,
+    .pit.playable.p2.pressed { background: color-mix(in srgb, var(--accent-3) 22%, var(--surface)); }
+
+    /* The pit being sown from, and pits taken in a capture */
+    .pit.source.p1 { box-shadow: inset 0 0 0 3px var(--accent); }
+    .pit.source.p2 { box-shadow: inset 0 0 0 3px var(--accent-3); }
+    .pit.taken { background: var(--muted); }
+
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: -1px;
+      border: 1px solid var(--piece-line);
+    }
+    .dot.p1 { background: var(--accent); }
+    .dot.p2 { background: var(--accent-3); }
+
+    /* Fixed-height message line so nothing moves */
+    .message {
+      height: 20px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+  </style>
+</head>
+<body>
+  <header class="game-header">
+    <a class="back" href="../../index.html"><span class="icon-btn">←</span>Mangala</a>
+    <div class="header-right">
+      <span class="score" id="status"></span>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
+  </header>
+
+  <main class="game-main">
+    <div class="game-box">
+      <div class="play">
+        <div class="labels top" id="labelsTop"></div>
+        <div class="board" id="board"></div>
+        <div class="labels bottom" id="labelsBottom"></div>
+      </div>
+    </div>
+    <div class="message" id="message"></div>
+    <div class="actions">
+      <button class="btn ghost" id="undo">Undo</button>
+      <button class="btn" id="reset">New game</button>
+    </div>
+  </main>
+
+  <script src="../../assets/sound.js"></script>
+  <script src="mangala.js"></script>
+</body>
+</html>
