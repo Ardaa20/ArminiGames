@@ -1,5 +1,5 @@
 // Soft, short sound effects generated with the Web Audio API (no audio files).
-// Usage: Sound.move(), Sound.capture(), Sound.win(), Sound.draw()
+// Usage: Sound.move(), Sound.capture(), Sound.win(), Sound.draw(), Sound.roll()
 const Sound = (function () {
   let ctx = null;
 
@@ -89,5 +89,7 @@ const Sound = (function () {
     win() { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => note(0.15 + i * 0.11, f, 0.6, 0.12)); },
     // Two calm notes for a draw
     draw() { [659.25, 523.25].forEach((f, i) => note(0.15 + i * 0.16, f, 0.6, 0.1)); },
+    // Dice rolling: a few quiet, quick clicks that settle
+    roll() { [0, 0.06, 0.13, 0.22].forEach((t, i) => woodClick(t, 0.3 - i * 0.05, 1500 - i * 120)); },
   };
 })();

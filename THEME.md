@@ -159,7 +159,7 @@ Every game uses the same frame (classes in `assets/theme.css`):
 - Buttons: `--radius-sm`, `--accent` background, `--on-accent` label; slightly darker on hover.
 - In-game shapes are rounded too and use palette colors.
 - **No colorful games:** no rainbow, neon or bright colors. If colors must be distinguished, use the palette's accent tones.
-- Sound is optional; if used, keep it soft and short. Use the shared `assets/sound.js` (generated with Web Audio, no audio files): `Sound.move()` for a normal move/placement, `Sound.capture()` when something is taken, `Sound.win()` for a win, `Sound.draw()` for a draw. New sounds are added to that file in the same quiet style (sine tones, fast fade-out, low volume). Undo plays no sound.
+- Sound is optional; if used, keep it soft and short. Use the shared `assets/sound.js` (generated with Web Audio, no audio files): `Sound.move()` for a normal move/placement, `Sound.capture()` when something is taken, `Sound.win()` for a win, `Sound.draw()` for a draw, `Sound.roll()` for rolling dice. New sounds are added to that file in the same quiet style (sine tones, fast fade-out, low volume). Undo plays no sound.
 - Must work with both mouse and touch, with no overflow on mobile.
 
 ### Drawings
