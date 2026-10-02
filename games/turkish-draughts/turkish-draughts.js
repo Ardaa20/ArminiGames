@@ -99,7 +99,7 @@ const takenTop = document.getElementById("takenTop");
 const takenBottom = document.getElementById("takenBottom");
 const endOverlay = document.getElementById("endOverlay");
 
-let state, history, moves, path, selected, targets, over;
+let state, history, moves, path, origin, selected, targets, over;
 let drag = null; // { r, c, x, y, moved, wasSelected, ghost, hover }
 
 const DRAG_THRESHOLD = 5; // px before a press becomes a drag
@@ -116,13 +116,18 @@ function newGame() {
 function startTurn() {
   moves = legalMoves(state);
   path = [];      // steps already played in a multi-capture
+  origin = null;  // square the moving piece started from
   selected = null;
   targets = [];
 }
 
 // Moves still possible for the piece on (r, c) given the steps already played
 function movesFor(r, c) {
-  if (path.length) return moves.filter((m) => path.every((st, i) => m.steps[i].r === st.r && m.steps[i].c === st.c));
+  if (path.length) {
+    // Same piece (origin square) and the same steps played so far
+    return moves.filter((m) => m.fr === origin[0] && m.fc === origin[1] &&
+      path.every((st, i) => m.steps[i].r === st.r && m.steps[i].c === st.c));
+  }
   return moves.filter((m) => m.fr === r && m.fc === c);
 }
 
@@ -272,6 +277,7 @@ window.addEventListener("pointercancel", onPointerCancel);
 function playStep(step) {
   const [fr, fc] = selected;
   if (!path.length) {
+    origin = [fr, fc];
     history.push(JSON.parse(JSON.stringify(state)));
     state.last = [[fr, fc]];
   }
