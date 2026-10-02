@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checkers · ArminiGames</title>
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <script src="../../assets/theme.js"></script>
+  <style>
+    /* Fixed square size: 60px everywhere, only shrinks when the screen is too narrow */
+    .board {
+      --sq: min(60px, calc((100vw - 56px) / 8));
+      display: grid;
+      grid-template-columns: repeat(8, var(--sq));
+      grid-template-rows: repeat(8, var(--sq));
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .sq {
+      position: relative;
+      width: var(--sq);
+      height: var(--sq);
+      display: grid;
+      place-items: center;
+    }
+    .sq.light { background-color: var(--board-light); }
+    .sq.dark  { background-color: var(--board-dark); }
+    .sq.last  { background-color: color-mix(in srgb, var(--accent) 35%, var(--board-light)); }
+    .sq.sel   { background-color: color-mix(in srgb, var(--accent) 65%, var(--board-light)); }
+    .sq.own   { cursor: grab; }
+    .sq.target { cursor: pointer; }
+
+    .sq.target::after {
+      content: "";
+      position: absolute;
+      width: 28%;
+      height: 28%;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+    .sq.target.capture::after {
+      width: 88%;
+      height: 88%;
+      background: transparent;
+      border: 4px solid var(--accent);
+    }
+    .sq.hover { box-shadow: inset 0 0 0 3px var(--accent); }
+
+    /* Pieces */
+    .piece {
+      display: block;
+      width: 84%;
+      height: 84%;
+      pointer-events: none;
+      stroke: var(--piece-line);
+      stroke-width: 3.5;
+      stroke-linejoin: round;
+    }
+    .piece.w { fill: var(--piece-white); --detail: var(--piece-line); }
+    .piece.b { fill: var(--piece-black); --detail: var(--piece-white); }
+    .piece .d { fill: var(--detail); stroke: none; }
+    .piece .d.line { fill: none; stroke: var(--detail); stroke-width: 3; }
+    .piece.lifted { opacity: 0.3; }
+
+    .drag-ghost {
+      position: fixed;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      z-index: 20;
+      filter: drop-shadow(0 4px 6px var(--overlay));
+    }
+    .drag-ghost .piece { width: 100%; height: 100%; }
+    body.dragging, body.dragging .sq { cursor: grabbing; }
+
+    /* Captured pieces: fixed height so the board never moves */
+    .taken {
+      height: 28px;
+      padding: 0 4px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+    .taken .piece { width: 20px; height: 20px; margin-right: -4px; flex: none; opacity: 0.75; }
+
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: -1px;
+      border: 1px solid var(--piece-line);
+    }
+    .dot.w { background: var(--piece-white); }
+    .dot.b { background: var(--piece-black); }
+  </style>
+</head>
+<body>
+  <header class="game-header">
+    <a class="back" href="../../index.html"><span class="icon-btn">←</span>Checkers</a>
+    <div class="header-right">
+      <span class="score" id="status"></span>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
+  </header>
+
+  <main class="game-main">
+    <div class="game-box">
+      <div class="taken" id="takenTop"></div>
+      <div class="board" id="board"></div>
+      <div class="taken" id="takenBottom"></div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="undo">Undo</button>
+      <button class="btn" id="reset">New game</button>
+    </div>
+  </main>
+
+  <div class="overlay" id="endOverlay" hidden>
+    <div class="modal">
+      <h2 id="endTitle"></h2>
+      <p id="endText"></p>
+      <div class="actions">
+        <button class="btn ghost" id="endUndo">Undo</button>
+        <button class="btn" id="endReset">New game</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/sound.js"></script>
+  <script src="pieces.js"></script>
+  <script src="checkers.js"></script>
+</body>
+</html>
