@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sudoku · ArminiGames</title>
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <script src="../../assets/theme.js"></script>
+  <style>
+    /* Fixed cell size: 44px everywhere, only shrinks when the screen is too narrow */
+    :root { --cell: min(44px, calc((100vw - 68px) / 9)); }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(9, var(--cell));
+      grid-template-rows: repeat(9, var(--cell));
+      border: 2px solid var(--text-soft);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .cell {
+      width: var(--cell);
+      height: var(--cell);
+      display: grid;
+      place-items: center;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      font-size: calc(var(--cell) * 0.52);
+      font-weight: 600;
+      color: var(--accent);
+      cursor: pointer;
+      transition: background-color var(--ease);
+    }
+    .cell.edge-r { border-right: 2px solid var(--text-soft); }
+    .cell.edge-b { border-bottom: 2px solid var(--text-soft); }
+    .cell.last-c { border-right: none; }
+    .cell.last-r { border-bottom: none; }
+
+    .cell.given { color: var(--text); font-weight: 700; }
+    .cell.user  { color: var(--accent); }
+    .cell.peer  { background: color-mix(in srgb, var(--muted) 60%, var(--surface)); }
+    .cell.same  { background: color-mix(in srgb, var(--accent) 25%, var(--surface)); }
+    .cell.sel   { background: color-mix(in srgb, var(--accent) 45%, var(--surface)); }
+    .cell.bad   { color: var(--accent-3); }
+    .cell.bad.user { background: color-mix(in srgb, var(--accent-3) 22%, var(--surface)); }
+    .cell.bad.user.sel { background: color-mix(in srgb, var(--accent-3) 40%, var(--surface)); }
+
+    /* Pencil notes: a 3x3 grid of small candidate digits */
+    .notes {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 2px;
+      font-size: calc(var(--cell) * 0.24);
+      font-weight: 600;
+      line-height: 1;
+      color: var(--text-soft);
+    }
+    .notes span { display: grid; place-items: center; }
+
+    /* Fixed-height message line so the layout never moves */
+    .message {
+      height: 22px;
+      margin-top: 8px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+
+    /* Number pad: same width as the board */
+    .pad {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 4px;
+      width: calc(var(--cell) * 9 + 4px);
+    }
+    .key {
+      height: calc(var(--cell) + 6px);
+      border: none;
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      font: inherit;
+      font-size: calc(var(--cell) * 0.45);
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform var(--ease), box-shadow var(--ease), opacity var(--ease);
+    }
+    .key:hover { transform: scale(1.05); box-shadow: var(--shadow-hover); }
+    .key:active { transform: scale(0.95); }
+    .key.spent { opacity: 0.4; }
+
+    .tools { display: flex; gap: 8px; }
+    .tools .btn { min-width: 84px; }
+
+    /* Difficulty picker */
+    .level {
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .level button {
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      padding: 7px 12px;
+      border-radius: calc(var(--radius-sm) - 3px);
+      background: transparent;
+      color: var(--text-soft);
+      transition: background-color var(--ease), color var(--ease);
+    }
+    .level button.on { background: var(--muted); color: var(--text); }
+
+    .score { font-variant-numeric: tabular-nums; }
+    .game-main { gap: 16px; }
+    .actions { align-items: center; }
+  </style>
+</head>
+<body>
+  <header class="game-header">
+    <a class="back" href="../../index.html"><span class="icon-btn">←</span>Sudoku</a>
+    <div class="header-right">
+      <span class="score" id="status"></span>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
+  </header>
+
+  <main class="game-main">
+    <div class="game-box">
+      <div class="board" id="board"></div>
+      <div class="message" id="message"></div>
+    </div>
+    <div class="pad" id="pad"></div>
+    <div class="tools">
+      <button class="btn ghost" id="undo" type="button">Undo</button>
+      <button class="btn ghost" id="erase" type="button">Erase</button>
+      <button class="btn ghost" id="notes" type="button" aria-pressed="false">Notes</button>
+    </div>
+    <div class="actions">
+      <div class="level">
+        <button type="button" data-level="easy">Easy</button>
+        <button type="button" data-level="medium">Medium</button>
+        <button type="button" data-level="hard">Hard</button>
+      </div>
+      <button class="btn" id="reset" type="button">New game</button>
+    </div>
+  </main>
+
+  <script src="../../assets/sound.js"></script>
+  <script src="sudoku.js"></script>
+</body>
+</html>
