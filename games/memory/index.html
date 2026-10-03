@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Memory · ArminiGames</title>
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <script src="../../assets/theme.js"></script>
+  <style>
+    /* Fixed card size per grid; only shrinks when the screen is too narrow.
+       N columns + gaps + box padding (24px) + page gutter (32px) must fit. */
+    .board {
+      --n: 4;
+      --gap-card: 10px;
+      --cell-max: 72px;
+      --cell: min(var(--cell-max), calc((100vw - 56px - (var(--n) - 1) * var(--gap-card)) / var(--n)));
+      display: grid;
+      grid-template-columns: repeat(var(--n), var(--cell));
+      grid-auto-rows: var(--cell);
+      gap: var(--gap-card);
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .board.size-6 { --n: 6; --gap-card: 8px; --cell-max: 50px; }
+
+    .card {
+      position: relative;
+      perspective: 600px;
+      cursor: pointer;
+    }
+    .card-inner {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      transition: transform 400ms ease;
+    }
+    .card.up .card-inner { transform: rotateY(180deg); }
+
+    .face {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-sm);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      display: grid;
+      place-items: center;
+      transition: background var(--ease), box-shadow var(--ease);
+    }
+    .board.size-6 .face { border-radius: 10px; }
+
+    /* Back: plain muted surface with a small inner rounded line */
+    .back-face { background: var(--muted); }
+    .back-face::after {
+      content: "";
+      position: absolute;
+      inset: 22%;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+    }
+    .card:not(.up):hover .back-face { background: color-mix(in srgb, var(--text) 8%, var(--muted)); }
+
+    /* Front: the symbol */
+    .front-face {
+      transform: rotateY(180deg);
+      background: var(--surface);
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+    .front-face svg { width: 62%; height: 62%; fill: currentColor; }
+    .front-face.c0 { color: var(--text); }
+    .front-face.c1 { color: var(--accent); }
+
+    /* Found pairs: success tint and outline */
+    .card.matched { cursor: default; }
+    .card.matched .front-face {
+      background: color-mix(in srgb, var(--accent-2) 18%, var(--surface));
+      box-shadow: inset 0 0 0 2px var(--accent-2);
+    }
+
+    .btn.ghost.active { border-color: var(--accent); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
+
+    /* Fixed-height message line so nothing moves */
+    .message {
+      height: 20px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+  </style>
+</head>
+<body>
+  <header class="game-header">
+    <a class="back" href="../../index.html"><span class="icon-btn">←</span>Memory</a>
+    <div class="header-right">
+      <span class="score" id="status"></span>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
+  </header>
+
+  <main class="game-main">
+    <div class="game-box">
+      <div class="board" id="board"></div>
+    </div>
+    <div class="message" id="message"></div>
+    <div class="actions">
+      <button class="btn ghost" id="size4" type="button">4 x 4</button>
+      <button class="btn ghost" id="size6" type="button">6 x 6</button>
+      <button class="btn" id="reset" type="button">Restart</button>
+    </div>
+  </main>
+
+  <div class="overlay" id="endOverlay" hidden>
+    <div class="modal">
+      <h2>All pairs found</h2>
+      <p id="endText"></p>
+      <p id="endBest"></p>
+      <div class="actions">
+        <button class="btn" id="endReset" type="button">Play again</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/sound.js"></script>
+  <script src="cards.js"></script>
+  <script src="memory.js"></script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2048 · ArminiGames</title>
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <script src="../../assets/theme.js"></script>
+  <style>
+    /* Fixed cell size: 84px everywhere, only shrinks when the screen is too narrow */
+    .board {
+      --cell: min(84px, calc((100vw - 106px) / 4));
+      --g: 10px;
+      --slide: 120ms;
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(4, var(--cell));
+      grid-template-rows: repeat(4, var(--cell));
+      gap: var(--g);
+      padding: var(--g);
+      background: var(--border);
+      border-radius: var(--radius-sm);
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .cell {
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+    }
+
+    /* Tiles sit on top of the cells and slide with a transform */
+    .tile {
+      position: absolute;
+      left: var(--g);
+      top: var(--g);
+      width: var(--cell);
+      height: var(--cell);
+      transform: translate(calc(var(--c) * (var(--cell) + var(--g))), calc(var(--r) * (var(--cell) + var(--g))));
+      transition: transform var(--slide) ease;
+    }
+    .tile.static { transition: none; }
+
+    .face {
+      width: 100%;
+      height: 100%;
+      border-radius: var(--radius-sm);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: calc(var(--cell) * 0.42);
+      line-height: 1;
+      color: var(--text);
+      background: color-mix(in srgb, var(--accent) var(--p), var(--muted));
+    }
+    .tile.d3 .face { font-size: calc(var(--cell) * 0.35); }
+    .tile.d4 .face { font-size: calc(var(--cell) * 0.28); }
+    .tile.d5 .face { font-size: calc(var(--cell) * 0.23); }
+    .tile.d6 .face { font-size: calc(var(--cell) * 0.19); }
+    .tile.dark .face { color: var(--on-accent); }
+    .tile.top .face {
+      background: color-mix(in srgb, var(--accent) 70%, var(--text));
+      color: var(--surface);
+    }
+
+    .tile.new .face { animation: spawn 140ms ease var(--slide) backwards; }
+    .tile.merged { z-index: 1; }
+    .tile.merged .face { animation: pop 150ms ease var(--slide) backwards; }
+
+    @keyframes spawn {
+      from { opacity: 0; transform: scale(0.6); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    @keyframes pop {
+      0%   { opacity: 0; transform: scale(0.85); }
+      60%  { opacity: 1; transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    #status { white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <header class="game-header">
+    <a class="back" href="../../index.html"><span class="icon-btn">←</span>2048</a>
+    <div class="header-right">
+      <span class="score" id="status"></span>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
+  </header>
+
+  <main class="game-main">
+    <div class="game-box">
+      <div class="board" id="board"></div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="undo">Undo</button>
+      <button class="btn" id="reset">New game</button>
+    </div>
+  </main>
+
+  <div class="overlay" id="endOverlay" hidden>
+    <div class="modal">
+      <h2 id="endTitle"></h2>
+      <p id="endText"></p>
+      <div class="actions" id="endActions">
+        <button class="btn ghost" id="endUndo">Undo</button>
+        <button class="btn ghost" id="keepGoing">Keep going</button>
+        <button class="btn" id="endReset">New game</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/sound.js"></script>
+  <script src="2048.js"></script>
+</body>
+</html>
