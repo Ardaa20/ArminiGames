@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minesweeper · ArminiGames</title>
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <script src="../../assets/theme.js"></script>
+  <style>
+    /* Fixed cell size per difficulty; only shrinks when the screen is too narrow.
+       56px = 2 × 16px page gutter + 2 × 12px box padding. */
+    .board {
+      --gap-cell: 2px;
+      --cell: min(36px, calc((100vw - 56px - 8 * var(--gap-cell)) / 9));
+      display: grid;
+      grid-template-columns: repeat(9, var(--cell));
+      grid-auto-rows: var(--cell);
+      gap: var(--gap-cell);
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    .board.medium {
+      --cell: min(28px, calc((100vw - 56px - 15 * var(--gap-cell)) / 16));
+      grid-template-columns: repeat(16, var(--cell));
+    }
+
+    .cell {
+      width: var(--cell);
+      height: var(--cell);
+      border-radius: 6px;
+      background: var(--board-dark);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: calc(var(--cell) * 0.52);
+      line-height: 1;
+      color: var(--text);
+      cursor: pointer;
+      transition: background var(--ease);
+    }
+    .board.medium .cell { border-radius: 4px; }
+    .board:not(.over) .cell.hidden:hover { background: color-mix(in srgb, var(--accent) 22%, var(--board-dark)); }
+    .cell.open { background: var(--bg); cursor: default; }
+    .cell.open.chordable { cursor: pointer; }
+    .cell.n1, .cell.n2 { color: var(--text-soft); }
+    .cell.boom { background: var(--accent-3); }
+    .board.over .cell { cursor: default; }
+
+    .cell svg { width: 70%; height: 70%; display: block; }
+    .flag .pole { stroke: var(--text); stroke-width: 7; stroke-linecap: round; fill: none; }
+    .flag .cloth { fill: var(--accent); stroke: var(--accent); stroke-width: 4; stroke-linejoin: round; }
+    .mine .body { fill: var(--text); }
+    .mine .spikes { stroke: var(--text); stroke-width: 8; stroke-linecap: round; }
+    .mine .shine { fill: var(--bg); }
+    .cell.boom .mine .body { fill: var(--on-accent); }
+    .cell.boom .mine .spikes { stroke: var(--on-accent); }
+    .cell.boom .mine .shine { fill: var(--accent-3); }
+    .wrong .cross { stroke: var(--text); stroke-width: 8; stroke-linecap: round; }
+    .cell.wrong-flag svg .cloth { opacity: 0.45; }
+
+    /* Difficulty choice */
+    .levels { display: flex; gap: 8px; }
+    .levels .btn:not(.selected) { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .levels .btn.selected { border: 1px solid transparent; }
+
+    /* Flag-mode toggle */
+    .flag-toggle { display: flex; align-items: center; gap: 8px; }
+    .flag-toggle svg { width: 18px; height: 18px; }
+    .flag-toggle:not(.on) { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .flag-toggle.on { border: 1px solid transparent; }
+    .flag-toggle.on .flag .cloth { fill: var(--on-accent); stroke: var(--on-accent); }
+    .flag-toggle.on .flag .pole { stroke: var(--on-accent); }
+
+    .score { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+    /* Fixed-height message line so the board never moves */
+    .message {
+      height: 20px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-soft);
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body>
+  <header class="game-header">
+    <a class="back" href="../../index.html"><span class="icon-btn">←</span>Minesweeper</a>
+    <div class="header-right">
+      <span class="score" id="status"></span>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
+  </header>
+
+  <main class="game-main">
+    <div class="levels" id="levels">
+      <button class="btn" type="button" data-level="easy">Easy</button>
+      <button class="btn" type="button" data-level="medium">Medium</button>
+    </div>
+    <div class="game-box">
+      <div class="board" id="board"></div>
+    </div>
+    <div class="message" id="message"></div>
+    <div class="actions">
+      <button class="btn flag-toggle" type="button" id="flagMode" aria-pressed="false"></button>
+      <button class="btn" type="button" id="reset">New game</button>
+    </div>
+  </main>
+
+  <script src="../../assets/sound.js"></script>
+  <script src="minesweeper.js"></script>
+</body>
+</html>
