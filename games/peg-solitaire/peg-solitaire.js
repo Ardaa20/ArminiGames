@@ -74,15 +74,26 @@ function newGame() {
   render();
 }
 
+// The 49 cell elements are created once; render() only updates their classes and
+// contents, so the element holding the pointer capture is never destroyed mid-drag.
+const cells = [];
+for (let r = 0; r < N; r++) {
+  cells.push([]);
+  for (let c = 0; c < N; c++) {
+    const cell = document.createElement("div");
+    boardEl.appendChild(cell);
+    cells[r].push(cell);
+  }
+}
+
 function render() {
   const at = (sq, r, c) => sq && sq[0] === r && sq[1] === c;
   const lifted = drag && drag.moved ? [drag.r, drag.c] : null;
   const hover = drag && drag.moved ? drag.hover : null;
-  boardEl.innerHTML = "";
 
   for (let r = 0; r < N; r++) {
     for (let c = 0; c < N; c++) {
-      const cell = document.createElement("div");
+      const cell = cells[r][c];
       const v = board[r][c];
       const cls = ["cell"];
       if (v !== null) {
@@ -95,8 +106,11 @@ function render() {
         }
       }
       cell.className = cls.join(" ");
-      if (v === true) cell.innerHTML = pegSVG(at(lifted, r, c) ? "lifted" : "");
-      boardEl.appendChild(cell);
+      const content = v === true ? pegSVG(at(lifted, r, c) ? "lifted" : "") : "";
+      if (cell.dataset.content !== content) {
+        cell.dataset.content = content;
+        cell.innerHTML = content;
+      }
     }
   }
 
@@ -145,6 +159,7 @@ function onPointerDown(e) {
 
   const wasSelected = !!selected && selected[0] === r && selected[1] === c;
   select(r, c);
+  try { boardEl.setPointerCapture(e.pointerId); } catch (err) { /* capture is best effort */ }
   drag = { r, c, x: e.clientX, y: e.clientY, moved: false, wasSelected, ghost: null, hover: null };
   render();
 }
@@ -179,7 +194,9 @@ function onPointerUp(e) {
   if (d.ghost) d.ghost.remove();
   document.body.classList.remove("dragging");
 
-  if (d.moved) {
+  // A quick flick may end without any pointermove past the threshold: still a drop
+  const far = Math.hypot(e.clientX - d.x, e.clientY - d.y) >= DRAG_THRESHOLD;
+  if (d.moved || far) {
     const sq = cellAt(e.clientX, e.clientY);
     const move = sq && targets.find((m) => m.tr === sq[0] && m.tc === sq[1]);
     if (move) return commit(move);
