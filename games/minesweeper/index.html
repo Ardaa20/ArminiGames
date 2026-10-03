@@ -25,6 +25,11 @@
       --cell: min(28px, calc((100vw - 56px - 15 * var(--gap-cell)) / 16));
       grid-template-columns: repeat(16, var(--cell));
     }
+    /* Portrait Medium for narrow screens (12 x 21) */
+    .board.medium-tall {
+      --cell: min(26px, calc((100vw - 56px - 11 * var(--gap-cell)) / 12));
+      grid-template-columns: repeat(12, var(--cell));
+    }
 
     .cell {
       width: var(--cell);
@@ -40,7 +45,7 @@
       cursor: pointer;
       transition: background var(--ease);
     }
-    .board.medium .cell { border-radius: 4px; }
+    .board.medium .cell, .board.medium-tall .cell { border-radius: 4px; }
     .board:not(.over) .cell.hidden:hover { background: color-mix(in srgb, var(--accent) 22%, var(--board-dark)); }
     .cell.open { background: var(--bg); cursor: default; }
     .cell.open.chordable { cursor: pointer; }

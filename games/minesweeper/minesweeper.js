@@ -6,6 +6,11 @@ const LEVELS = {
   easy:   { cols: 9,  rows: 9,  mines: 10 },
   medium: { cols: 16, rows: 16, mines: 40 },
 };
+// Medium on narrow screens: a portrait board with about the same cell count,
+// so the cells stay large enough to tap. Chosen when a new game starts.
+const MEDIUM_TALL = { cols: 12, rows: 21 };
+// Width the square Medium board needs: 16 x 28px cells + 15 x 2px gaps + 56px page/box padding
+const MEDIUM_WIDE_MIN = 16 * 28 + 15 * 2 + 56;
 const LONG_PRESS = 400; // ms on touch before a press places a flag
 const BEST_KEY = "minesweeper-best";
 
@@ -164,7 +169,8 @@ function stopTimer() {
 
 function buildBoard() {
   boardEl.innerHTML = "";
-  boardEl.classList.toggle("medium", level === "medium");
+  boardEl.classList.toggle("medium", level === "medium" && cols === 16);
+  boardEl.classList.toggle("medium-tall", level === "medium" && cols === MEDIUM_TALL.cols);
   cells = [];
   for (let i = 0; i < total; i++) {
     const el = document.createElement("div");
@@ -220,7 +226,8 @@ function renderControls() {
 
 function newGame() {
   stopTimer();
-  ({ cols, rows } = LEVELS[level]);
+  const tall = level === "medium" && document.documentElement.clientWidth < MEDIUM_WIDE_MIN;
+  ({ cols, rows } = tall ? MEDIUM_TALL : LEVELS[level]);
   total = cols * rows;
   mines = new Array(total).fill(false);
   open = new Array(total).fill(false);
