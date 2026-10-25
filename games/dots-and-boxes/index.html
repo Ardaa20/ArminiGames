@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dots and Boxes · ArminiGames</title>
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <script src="../../assets/theme.js"></script>
+  <style>
+    /* Fixed board size: 340px, only shrinks when the screen is too narrow */
+    .board {
+      display: block;
+      width: min(340px, calc(100vw - 56px));
+      height: auto;
+      touch-action: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .dot-pt { fill: var(--text); }
+
+    /* Lines: empty ones are invisible until hovered, drawn ones take the player's color */
+    .line {
+      stroke: transparent;
+      stroke-width: 7;
+      stroke-linecap: round;
+      transition: stroke var(--ease);
+    }
+    .line.p1 { stroke: var(--accent); }
+    .line.p2 { stroke: var(--accent-3); }
+    .line.hover.next-p1 { stroke: color-mix(in srgb, var(--accent) 45%, transparent); }
+    .line.hover.next-p2 { stroke: color-mix(in srgb, var(--accent-3) 45%, transparent); }
+    .line.last { stroke-width: 9; }
+
+    /* Wide invisible hit area on top of each line */
+    .hit { stroke: transparent; stroke-width: 24; stroke-linecap: round; cursor: pointer; }
+    .hit.taken, .board.locked .hit { cursor: default; pointer-events: none; }
+
+    .box { fill: transparent; transition: fill var(--ease); }
+    .box.p1 { fill: color-mix(in srgb, var(--accent) 35%, var(--surface)); }
+    .box.p2 { fill: color-mix(in srgb, var(--accent-3) 35%, var(--surface)); }
+
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: -1px;
+      border: 1px solid var(--piece-line);
+    }
+    .dot.p1 { background: var(--accent); }
+    .dot.p2 { background: var(--accent-3); }
+
+    /* Scores under the board; fixed height so nothing moves */
+    .scores {
+      height: 20px;
+      display: flex;
+      gap: 24px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+    .scores .active { color: var(--text); }
+
+    .message {
+      height: 20px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+  </style>
+</head>
+<body>
+  <header class="game-header">
+    <a class="back" href="../../index.html"><span class="icon-btn">←</span>Dots and Boxes</a>
+    <div class="header-right">
+      <span class="score" id="status"></span>
+      <button class="icon-btn theme-toggle" type="button"></button>
+    </div>
+  </header>
+
+  <main class="game-main">
+    <div class="game-box">
+      <svg class="board" id="board" viewBox="0 0 340 340" aria-label="Dots and Boxes board"></svg>
+    </div>
+    <div class="scores" id="scores"></div>
+    <div class="message" id="message"></div>
+    <div class="actions">
+      <button class="btn ghost" id="undo">Undo</button>
+      <button class="btn" id="reset">New game</button>
+    </div>
+  </main>
+
+  <script src="../../assets/sound.js"></script>
+  <script src="dots-and-boxes.js"></script>
+</body>
+</html>
